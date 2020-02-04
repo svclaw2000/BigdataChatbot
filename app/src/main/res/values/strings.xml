@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">SwcApp</string>
+    <string name="announcer_idle">빨간 버튼을 누르고 말씀해 주세요</string>
+    <string name="announcer_hello">안녕하세요!</string>
+    <string name="announcer_retry">다시 시도해 주세요</string>
+    <string name="announcer_really">정말요?</string>
+    <string name="announcer_listen">말씀하세요</string>
+    <string name="announcer_error">무슨 말인지 잘 모르겠어요</string>
+</resources>
