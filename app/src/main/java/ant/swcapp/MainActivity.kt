@@ -16,13 +16,14 @@ import androidx.core.content.ContextCompat
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
-import android.widget.ImageButton
 import android.widget.ImageView
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Exception
 import android.os.Handler
 import android.os.Message
 import com.bumptech.glide.Glide
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 
 
 private const val PROCESS_LOG = "PROCESS LOG"
@@ -44,7 +45,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // SpeechRecognizer 초기화용 인텐트
-    lateinit var i:Intent
+    lateinit var _intent:Intent
 
     // STT 오브젝트 생성
     lateinit var mRecognizer: SpeechRecognizer
@@ -54,10 +55,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         // SpeechRecognizer 설정에 필요한 정보를 담는 인텐트
-        i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        i.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "ant.swcapp")
-        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR")
-        i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+        _intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        _intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, packageName)
+        _intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR")
+        _intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
 
         // SpeechRecognizer 초기화
         mRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
@@ -70,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         recordingButton.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View) {
                 Log.d("rec Init", "mRecognizer 이 실행됩니다")
-                mRecognizer.startListening(i) // STT 실행
+                mRecognizer.startListening(_intent) // STT 실행
                 announcerTextView.text = getString(R.string.announcer_listen)
             }
         })
@@ -91,7 +92,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             // 애니메이션 이미지 변경을 담당하는 핸들러
-            private val announcerHandler= object: Handler(){
+            private val announcerHandler= object: Handler() {
                 override fun handleMessage(msg: Message){
                     setImageResource(frameList[nowFrame])
                 }
@@ -111,14 +112,14 @@ class MainActivity : AppCompatActivity() {
                 Thread(Runnable {
                     var preTime: Long = 0 // 과거 이 사진이 언제 변경되었는지? (nowTime 과 비교하여 Delay 만큼 경과했는지 비교하기 위해 사용)
                     var nowTime: Long // 현재 시간
-                    // Log.i(PROCESS_LOG, "INIT")
+                    // Log._intent(PROCESS_LOG, "INIT")
 
                     while (true) {
                         nowTime = System.currentTimeMillis()
-                        // Log.i(PROCESS_LOG, "preTime: $preTime, nowTime: $nowTime, nowTime - preTime: ${nowTime - preTime}, nowDelay: $nowDelay")
+                        // Log._intent(PROCESS_LOG, "preTime: $preTime, nowTime: $nowTime, nowTime - preTime: ${nowTime - preTime}, nowDelay: $nowDelay")
                         // 지정 딜레이만큼 시간이 지났으면 if 문 실행, 아니면 nowTime 만을 갱신하며 아무것도 하지 않는다
                         if (nowTime - preTime  > nowDelay) { // 딜레이만큼 시간 경과
-                            // Log.i(PROCESS_LOG, "nowTime - preTime > nowDelay")
+                            // Log._intent(PROCESS_LOG, "nowTime - preTime > nowDelay")
                             if (nowFrame == frameList.size - 1) { // 지금 이미지가 이 애니메이션의 마지막 이미지라면
                                 if (isLoop) { // 만약 이 애니메이션을 반복했다고 설정했다면, Frame 을 0 (처음 값) 으로 되돌려 반복시킨다
                                     nowFrame = 0
@@ -133,14 +134,14 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 }
                             } else { // 이 프레임이 애니메이션의 마지막이 아니라면 ( 수행할 프레임이 더 남아있다면) 프레임 값 증가
-                                // Log.i(PROCESS_LOG, "BEFORE nowFrame $nowFrame")
+                                // Log._intent(PROCESS_LOG, "BEFORE nowFrame $nowFrame")
                                 nowFrame++
-                                // Log.i(PROCESS_LOG, "AFTER nowFrame $nowFrame")
+                                // Log._intent(PROCESS_LOG, "AFTER nowFrame $nowFrame")
                             }
                             // 프레임이 변경되었으므로 이후 preTime 재설정, Handler 를 통해 이미지 변경 수행
                             nowDelay = frameDelay[nowFrame]
                             preTime = System.currentTimeMillis()
-                            // Log.i(PROCESS_LOG, "nowFrame BEFORE setImageResource $nowFrame")
+                            // Log._intent(PROCESS_LOG, "nowFrame BEFORE setImageResource $nowFrame")
                             val msg:Message = announcerHandler.obtainMessage()
                             announcerHandler.sendMessage(msg)
                         }
@@ -149,7 +150,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             // Announcer 의 상태를 Idle 로 설정
-            public fun setIdle(){
+            fun setIdle(){
                 frameList = arrayOf(R.drawable.announcer_idle1, R.drawable.announcer_idle2,
                                      R.drawable.announcer_idle1, R.drawable.announcer_idle2)
                 frameDelay = arrayOf(2000L, 200L, 3000L, 200L)
@@ -161,7 +162,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             // Announcer 의 상태를 Listen 으로 설정
-            public fun setListen(){
+            fun setListen(){
                 frameList = arrayOf(R.drawable.announcer_smile1, R.drawable.announcer_idle2,
                                       R.drawable.announcer_smile1, R.drawable.announcer_idle2)
                 frameDelay = arrayOf(2000L, 200L, 3000L, 200L)
@@ -174,7 +175,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             // Announcer 의 상태를 Alarm 으로 설정
-            public fun setAlarm(){
+            fun setAlarm(){
                 frameList = arrayOf(R.drawable.announcer_alarm1, R.drawable.announcer_idle2,
                     R.drawable.announcer_alarm1, R.drawable.announcer_idle2)
                 frameDelay = arrayOf(2000L, 200L, 3000L, 200L)
@@ -187,7 +188,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             // Announcer 의 상태를 Interested 로 설정
-            public fun setInterested(){
+            fun setInterested(){
                 frameList = arrayOf(R.drawable.announcer_interested1, R.drawable.announcer_idle2,
                     R.drawable.announcer_interested1, R.drawable.announcer_idle2)
                 frameDelay = arrayOf(2000L, 200L, 3000L, 200L)
@@ -206,7 +207,7 @@ class MainActivity : AppCompatActivity() {
 
             // 발화 (TTS) 함수
             // msg:String (in java; String msg) 를 넣어서 실행하면 된다
-            public fun talk(msg: String){
+            fun talk(msg: String){
                 if (mediaPlayer != null){
                     mediaPlayer!!.stop()
                     mediaPlayer = null
@@ -268,12 +269,15 @@ class MainActivity : AppCompatActivity() {
         override fun onResults(results: Bundle?) {
             var key: String = SpeechRecognizer.RESULTS_RECOGNITION
             val mResult: ArrayList<String>? = results?.getStringArrayList(key) ?: throw Exception("No Result Found")
-            sttTextView.text = "" + mResult!![0] // sttTextView 창에 표현
-            announcerTextView.text = getString(R.string.announcer_really)
+            val sMsg = mResult!![0]
+            sttTextView.text = sMsg // sttTextView 창에 표현
+            val sRetRaw = HttpAsyncTask(this@MainActivity).execute(Utils.POST_DIALOG, getJsonFromString(sMsg)).get()
+            val sRet = getStringFromResult(sRetRaw)
+            announcerTextView.text = sRet
             val announcer = announcer as MainActivity.Announcer
             announcer.apply{
                 setInterested() // 아나운서 상태 Interested 로 변경
-                talk(getString(R.string.announcer_really))
+                talk(sRet)
             }
 
             // 참고했습니다: https//dsnight.tistory.com/15
@@ -305,7 +309,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun getJsonFromString(sMsg: String) : String {
+        val jMsg = JsonObject()
+        jMsg.addProperty("requestType", "dialog");
+        jMsg.addProperty("userID", "admin");
+        jMsg.addProperty("rawText", sMsg);
+        return jMsg.toString()
+    }
 
+    fun getStringFromResult(sRet: String) : String {
+        Log.i("@@@", sRet)
+        val jRet = JsonParser.parseString(sRet).asJsonObject
+        if (jRet.has("resp")) {
+            return (jRet["resp"].asJsonObject
+                    ["client_actions"].asJsonObject
+                    ["vision"].asJsonArray
+                    [0].asJsonObject
+                    ["object"].asJsonArray
+                    [0].asString)
+        }
 
+        return getString(R.string.announcer_error)
+    }
 }
 
