@@ -17,7 +17,7 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.main_activity.*
 import java.lang.Exception
 import android.os.Handler
 import android.os.Message
@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.main_activity)
 
         // SpeechRecognizer 설정에 필요한 정보를 담는 인텐트
         _intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
