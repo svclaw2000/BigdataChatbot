@@ -12,6 +12,37 @@ import javax.net.ssl.*
 class HttpAsyncTask(val context: Context): AsyncTask<String, Void, String>() {
     companion object {
         const val RESULT_ERROR = "Did not work!"
+
+        fun trustAllHosts() {
+            val trustAllCerts = arrayOf( object : X509TrustManager {
+                override fun checkClientTrusted(
+                    chain: Array<out java.security.cert.X509Certificate>?,
+                    authType: String?
+                ) { }
+
+                override fun checkServerTrusted(
+                    chain: Array<out java.security.cert.X509Certificate>?,
+                    authType: String?
+                ) { }
+
+                override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
+                    return emptyArray()
+                }
+            })
+
+            val NullHostNameVerifier = HostnameVerifier {_, _ ->
+                true
+            }
+
+            try {
+                HttpsURLConnection.setDefaultHostnameVerifier(NullHostNameVerifier)
+                val sc = SSLContext.getInstance("TLS")
+                sc.init(null, trustAllCerts, SecureRandom())
+                HttpsURLConnection.setDefaultSSLSocketFactory(sc.socketFactory)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private val URL_DIALOG = "https://114.71.220.20:8001/bytecelldialog"
@@ -25,14 +56,16 @@ class HttpAsyncTask(val context: Context): AsyncTask<String, Void, String>() {
 
     fun POST_DIALOG(sMsg: String): String {
         var ret = RESULT_ERROR
+        val httpsCon: HttpsURLConnection
+        var httpCon: HttpURLConnection? = null
 
         try {
             trustAllHosts()
 
             val inputStream: InputStream
             val urlCon = URL(URL_DIALOG)
-            val httpsCon = urlCon.openConnection() as HttpsURLConnection
-            val httpCon = httpsCon
+            httpsCon = urlCon.openConnection() as HttpsURLConnection
+            httpCon = httpsCon
 
             httpCon.requestMethod = "POST"
             httpCon.setRequestProperty("Content-type", "application/json")
@@ -54,11 +87,11 @@ class HttpAsyncTask(val context: Context): AsyncTask<String, Void, String>() {
                     ret = convertInputStreamToString(inputStream)
             } catch (e: Exception) {
                 e.printStackTrace()
-            } finally {
-                httpCon.disconnect()
             }
         } catch (e: Exception) {
             e.printStackTrace()
+        } finally {
+            httpCon?.disconnect()
         }
 
         return ret
@@ -76,36 +109,5 @@ class HttpAsyncTask(val context: Context): AsyncTask<String, Void, String>() {
         }
         inputStream.close()
         return ret
-    }
-
-    fun trustAllHosts() {
-        val trustAllCerts = arrayOf( object : X509TrustManager {
-            override fun checkClientTrusted(
-                chain: Array<out java.security.cert.X509Certificate>?,
-                authType: String?
-            ) { }
-
-            override fun checkServerTrusted(
-                chain: Array<out java.security.cert.X509Certificate>?,
-                authType: String?
-            ) { }
-
-            override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
-                return emptyArray()
-            }
-        })
-
-        val NullHostNameVerifier = HostnameVerifier {_, _ ->
-            true
-        }
-
-        try {
-            HttpsURLConnection.setDefaultHostnameVerifier(NullHostNameVerifier)
-            val sc = SSLContext.getInstance("TLS")
-            sc.init(null, trustAllCerts, SecureRandom())
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.socketFactory)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
     }
 }

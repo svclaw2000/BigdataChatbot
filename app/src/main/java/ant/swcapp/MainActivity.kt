@@ -292,6 +292,7 @@ class MainActivity : AppCompatActivity() {
 
         // 적절하게 인식되지 않았을 때
         override fun onError(error: Int) {
+            Log.i("@@@", "에러: ${error}")
             announcerTextView.text = getString(R.string.announcer_error)
             val announcer = announcer as MainActivity.Announcer
             announcer.apply{
