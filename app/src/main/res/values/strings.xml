@@ -6,5 +6,6 @@
     <string name="announcer_really">정말요?</string>
     <string name="announcer_listen">말씀하세요</string>
     <string name="announcer_error">무슨 말인지 잘 모르겠어요</string>
-    <string name="powered_by">Powered by 빅데이터공학과 ANT lab.</string>
+    <string name="powered_by">powered by 빅데이터공학과 ANT lab.</string>
+    <string name="designed_by">designed by freepik.com</string>
 </resources>
