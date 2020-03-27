@@ -21,6 +21,7 @@ import kotlinx.android.synthetic.main.main_activity.*
 import java.lang.Exception
 import android.os.Handler
 import android.os.Message
+import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -49,6 +50,8 @@ class MainActivity : AppCompatActivity() {
 
     // STT 오브젝트 생성
     lateinit var mRecognizer: SpeechRecognizer
+
+    var isSpeaking = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -255,6 +258,7 @@ class MainActivity : AppCompatActivity() {
             announcer.apply{
                 setListen() // 아나운서 상태 Listen 으로 변경
             }
+            isSpeaking = true
         }
 
         // 중간 결과를 받아왔을 때
@@ -267,10 +271,13 @@ class MainActivity : AppCompatActivity() {
 
         // 최종 결과를 받아왔을때
         override fun onResults(results: Bundle?) {
+            if (!isSpeaking) return
+            isSpeaking = false
             var key: String = SpeechRecognizer.RESULTS_RECOGNITION
             val mResult: ArrayList<String>? = results?.getStringArrayList(key) ?: throw Exception("No Result Found")
             val sMsg = mResult!![0]
             sttTextView.text = sMsg // sttTextView 창에 표현
+            Log.i("@@@", sMsg)
             val sRetRaw = HttpAsyncTask(this@MainActivity).execute(Utils.POST_DIALOG, getJsonFromString(sMsg)).get()
             val sRet = getStringFromResult(sRetRaw)
             announcerTextView.text = sRet
@@ -292,6 +299,7 @@ class MainActivity : AppCompatActivity() {
 
         // 적절하게 인식되지 않았을 때
         override fun onError(error: Int) {
+            isSpeaking = false
             Log.i("@@@", "에러: ${error}")
             announcerTextView.text = getString(R.string.announcer_error)
             val announcer = announcer as MainActivity.Announcer
